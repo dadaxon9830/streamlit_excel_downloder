@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
 from collections import Counter
+import xlsxwriter
 import openpyxl
+
 
 st.set_page_config(page_title="Дипломная работа")
 st.title("Data analyzer 📈 📊")
@@ -13,9 +15,9 @@ if uploded_file:
         df = pd.read_excel(uploded_file)
         st.markdown("---")
 
-        deleted_data_list = st.multiselect("Удалить ненужный (неколичественный) показатель : ", df.columns)
-        df = df.drop(deleted_data_list, axis=1)
-        column_names = df.columns
+        deleted_data_list= st.multiselect("Удалить ненужный (неколичественный) показатель : ", df.columns)
+        df=df.drop(deleted_data_list,axis=1)
+        column_names=df.columns
         st.sidebar.header("Действия")
         show_btn = st.sidebar.button("Посмотреть дата")
         if show_btn:
@@ -113,20 +115,32 @@ if uploded_file:
         sorted_dol_raz_sos = dict(sorted(dol_raz_sostoyaniy.items(), key=lambda x: x[1], reverse=True))
         sorted_res_max_sovpad = dict(sorted(max_sovpad.items(), key=lambda x: x[1], reverse=False))
         sorted_sr_sovpad = dict(sorted(sr_sovpad.items(), key=lambda x: x[1], reverse=False))
-        pred_btn = st.sidebar.button("Представительность")
-        if pred_btn:
+        if "button_clicked" not in st.session_state:
+            st.session_state.button_clicked = False
+        def callback():
+            st.session_state.button_clicked = True
+        def anticallback():
+            st.session_state.button_clicked = False
+        pred_btn = st.sidebar.button("Представительность",on_click=callback)
+        if pred_btn or st.session_state.button_clicked:
             st.title("Таблица разнообразия:")
-            dictt = {"Вар_0": sorted_obyom_rang.keys(),
-                     "Объем-ранг": sorted_obyom_rang.values(),
-                     "Вар_1": sorted_dol_raz_sos.keys(),
-                     "Доля разн.знач.": sorted_dol_raz_sos.values(),
-                     "Вар_2": sorted_res_max_sovpad.keys(),
-                     "Макс.совпад.": sorted_res_max_sovpad.values(),
-                     "Вар_3": sorted_sr_sovpad.keys(),
-                     "Ср.Совпад": sorted_sr_sovpad.values()
-                     }
-            dataa = pd.DataFrame(dictt)
+            dictt={"Вар_0":sorted_obyom_rang.keys(),
+                   "Объем-ранг":sorted_obyom_rang.values(),
+                   "Вар_1":sorted_dol_raz_sos.keys(),
+                   "Доля разн.знач.":sorted_dol_raz_sos.values(),
+                   "Вар_2": sorted_res_max_sovpad.keys(),
+                   "Макс.совпад.":sorted_res_max_sovpad.values(),
+                   "Вар_3":sorted_sr_sovpad.keys(),
+                   "Ср.Совпад":sorted_sr_sovpad.values()
+            }
+            dataa= pd.DataFrame(dictt)
             st.write(dataa)
+            file_name=st.text_input("Чтобы сохранить в виде ексель файл, просто введите имя файла:")
+            dataa.to_excel(f"C:/Users/dadaxon9830/Desktop/{file_name}.xlsx", index=False)
+            if file_name:
+                st.success(f"Таблица успешно сохранен в рабочем столе с названием <-{file_name}->")
+                anticallback()
+
 
             st.title("Изменчивость")
             st.subheader("Масштабность ")
@@ -153,6 +167,5 @@ if uploded_file:
                                  "Типичность", "Фигурность", "Отпадение",
                                  "Изменяемость", "Центрированность", "Расположенность")
                                 )
-
 
 
