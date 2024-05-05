@@ -3,6 +3,7 @@ import pandas as pd
 from collections import Counter
 import xlsxwriter
 import openpyxl
+import random
 
 st.set_page_config(page_title="Дипломная работа")
 st.title("Data analyzer 📈 📊")
