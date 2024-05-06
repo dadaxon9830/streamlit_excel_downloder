@@ -8,6 +8,12 @@ import openpyxl
 st.set_page_config(page_title="Дипломная работа")
 st.title("Data analyzer 📈 📊")
 st.write(" ")
+hide_st_style="""
+<style>
+.stDeployButton {visibility:hidden}
+</style>
+"""
+st.markdown(hide_st_style,unsafe_allow_html=True)
 
 uploded_file = st.file_uploader("Выберите Excel файл  : ", type=["xlsx", "xls"])
 if uploded_file:
@@ -15,18 +21,18 @@ if uploded_file:
         df = pd.read_excel(uploded_file)
         st.markdown("---")
 
-        deleted_data_list= st.multiselect("Удалить ненужный (неколичественный) показатель : ", df.columns)
+        deleted_data_list= st.multiselect("Выберите столбцы, которые нужно удалить : ", df.columns)
         df=df.drop(deleted_data_list,axis=1)
         column_names=df.columns
         st.sidebar.header("Действия")
-        show_btn = st.sidebar.button("Посмотреть дата")
+        show_btn = st.sidebar.button("Посмотреть таблицу")
         if show_btn:
             st.subheader(" Таблица данных для анализа")
             st.dataframe(df)
     except Exception as e:
         st.warning(f"Ошибка с читением или показанием : {e}")
 
-    button_emp = st.sidebar.button("Эмпирическое описание для системы")
+    button_emp = st.sidebar.button("Эмпирическое описание")
     try:
         col_nums = df.shape[1]
         row_nums = df.shape[0]
@@ -77,7 +83,7 @@ if uploded_file:
         st.warning(f"Эмпирическая ошибка : {e}")
 
     try:
-        button_port = st.sidebar.button("Статистический портрет системы")
+        button_port = st.sidebar.button("Статистический портрет ")
         info_desc = df.describe()
         if button_port:
             st.header("Статистический портрет системы")
@@ -86,7 +92,7 @@ if uploded_file:
         st.warning(f"Статистическая ошибка : {e}")
 
     try:
-        st.sidebar.title("Слова и Понятия")
+        st.sidebar.title("Экспертиза слов")
         obyom_rang = dict()
         dol_raz_sostoyaniy = dict()
         max_sovpad = dict()
@@ -159,8 +165,6 @@ if uploded_file:
             st.write("Максимальное отклонение частности")
     except Exception as e:
         st.warning(f"Предствителная ошибка : {e}")
-
-    st.sidebar.title("Представительность типичного и особенного")
     box2 = st.sidebar.selectbox("xonn",
                                 ("Неравномерность величин",
                                  "Многозначность", "Правильность", "Уклонение",
