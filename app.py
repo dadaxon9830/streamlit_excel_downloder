@@ -176,6 +176,6 @@ if uploded_file:
         desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
         st.write(desktop)
     except Exception as e:
-        st.write(f"@xon9830 : {e}")
+        st.write(f"@xon9830")
 
 
