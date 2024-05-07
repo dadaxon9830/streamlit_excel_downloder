@@ -171,11 +171,11 @@ if uploded_file:
                                  "Типичность", "Фигурность", "Отпадение",
                                  "Изменяемость", "Центрированность", "Расположенность")
                                 )
-     try:
+    try:
         import os
         desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
         st.write(desktop)
-    except:
-        st.write("@xon9830")
+    except Exception as e:
+        st.write(f"@xon9830 : {e}")
 
 
