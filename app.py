@@ -31,6 +31,10 @@ if uploded_file:
             st.dataframe(df)
     except Exception as e:
         st.warning(f"Ошибка с читением или показанием : {e}")
+    import os
+
+    desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+    st.write(desktop)
 
     button_emp = st.sidebar.button("Эмпирическое описание")
     try:
