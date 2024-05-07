@@ -182,7 +182,6 @@ if uploded_file:
         st.write(desktop_path)
     except Exception as e:
         st.success(f"@xon9830")
-    except Exception as e:
-        st.write(f"@xon9830")
+   
 
 
