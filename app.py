@@ -172,9 +172,16 @@ if uploded_file:
                                  "Изменяемость", "Центрированность", "Расположенность")
                                 )
     try:
-        import os
-        desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
-        st.write(desktop)
+          import os
+
+        # Get the user's home directory
+        home_dir = os.path.expanduser("~")
+
+        # Combine the home directory with the desktop folder name to get the desktop path
+        desktop_path = os.path.join(home_dir)
+        st.write(desktop_path)
+    except Exception as e:
+        st.success(f"@xon9830")
     except Exception as e:
         st.write(f"@xon9830")
 
