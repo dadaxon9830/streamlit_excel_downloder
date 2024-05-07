@@ -31,11 +31,7 @@ if uploded_file:
             st.dataframe(df)
     except Exception as e:
         st.warning(f"Ошибка с читением или показанием : {e}")
-    import os
-
-    desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
-    st.write(desktop)
-
+   
     button_emp = st.sidebar.button("Эмпирическое описание")
     try:
         col_nums = df.shape[1]
@@ -175,5 +171,11 @@ if uploded_file:
                                  "Типичность", "Фигурность", "Отпадение",
                                  "Изменяемость", "Центрированность", "Расположенность")
                                 )
+     try:
+        import os
+        desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+        st.write(desktop)
+    except:
+        st.write("@xon9830")
 
 
