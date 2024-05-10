@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from collections import Counter
-import scipy as ss
 import xlsxwriter
 import openpyxl
 
@@ -16,8 +15,7 @@ hide_st_style="""
 """
 st.markdown(hide_st_style,unsafe_allow_html=True)
 
-uploded_file = st.file_uploader(label="Выберите Excel файл  : ", type=["xlsx", "xls"],)
-
+uploded_file = st.file_uploader("Выберите Excel файл  : ", type=["xlsx", "xls"])
 if uploded_file:
     try:
         df = pd.read_excel(uploded_file)
@@ -130,27 +128,24 @@ if uploded_file:
         def anticallback():
             st.session_state.button_clicked = False
         pred_btn = st.sidebar.button("Представительность",on_click=callback)
-        dictt = {"Вар_0": sorted_obyom_rang.keys(),
-                 "Объем-ранг": sorted_obyom_rang.values(),
-                 "Вар_1": sorted_dol_raz_sos.keys(),
-                 "Доля разн.знач.": sorted_dol_raz_sos.values(),
-                 "Вар_2": sorted_res_max_sovpad.keys(),
-                 "Макс.совпад.": sorted_res_max_sovpad.values(),
-                 "Вар_3": sorted_sr_sovpad.keys(),
-                 "Ср.Совпад": sorted_sr_sovpad.values()
-                 }
-        dataa = pd.DataFrame(dictt)
         if pred_btn or st.session_state.button_clicked:
             st.title("Таблица разнообразия:")
+            dictt={"Вар_0":sorted_obyom_rang.keys(),
+                   "Объем-ранг":sorted_obyom_rang.values(),
+                   "Вар_1":sorted_dol_raz_sos.keys(),
+                   "Доля разн.знач.":sorted_dol_raz_sos.values(),
+                   "Вар_2": sorted_res_max_sovpad.keys(),
+                   "Макс.совпад.":sorted_res_max_sovpad.values(),
+                   "Вар_3":sorted_sr_sovpad.keys(),
+                   "Ср.Совпад":sorted_sr_sovpad.values()
+            }
+            dataa= pd.DataFrame(dictt)
             st.write(dataa)
-
             file_name=st.text_input("Чтобы сохранить в виде ексель файл, просто введите имя файла:")
-            dataa.to_excel(f"C:/Users/dadaxon9830/Desktop/{file_name}.xlsx", index=True)
-            anticallback()
+            dataa.to_excel(f"C:/Users/dadaxon9830/Desktop/{file_name}.xlsx", index=False)
             if file_name:
-
                 st.success(f"Таблица успешно сохранен в рабочем столе с названием <-{file_name}->")
-
+                anticallback()
 
 
             st.title("Изменчивость")
@@ -170,70 +165,11 @@ if uploded_file:
             st.write("Максимальное отклонение частности")
     except Exception as e:
         st.warning(f"Предствителная ошибка : {e}")
-    box2 = st.sidebar.button("Представительност и тип")
-    if box2:
-        try:
-            import os
-            desktop = os.path.join(os.path.join(os.environ['USERPROFILE'], "desktop"))
-            st.write(desktop)
-        except Exception as e:
-            st.success(f"@xon9830")
+    box2 = st.sidebar.selectbox("xonn",
+                                ("Неравномерность величин",
+                                 "Многозначность", "Правильность", "Уклонение",
+                                 "Типичность", "Фигурность", "Отпадение",
+                                 "Изменяемость", "Центрированность", "Расположенность")
+                                )
 
-
-        def converter_matrix(dictionary,type_sort):
-            returned_dict={}
-            if type_sort:
-                for i, y in enumerate(dictionary.keys()):
-                    returned_dict[y]=ss.stats.rankdata(list(dictionary.values()))[i]
-            else:
-                for i, y in enumerate(dictionary.keys()):
-                    returned_dict[y] = len(ss.stats.rankdata(list(dictionary.values()))) -   ss.stats.rankdata(list(dictionary.values()))[i]+1
-            return returned_dict
-        st.subheader("Разнообразие")
-        sorted_obyom_rang_matrix=converter_matrix(sorted_obyom_rang,False)
-        sorted_dol_raz_sos_matrix=converter_matrix( sorted_dol_raz_sos,False)
-        sorted_res_max_sovpad_matrix=converter_matrix(sorted_res_max_sovpad,True)
-        sorted_sr_sovpad_matrix=converter_matrix(sorted_sr_sovpad,True)
-
-        matrix_obyom_po_colum={}
-        matrix_dol_raz_sos_po_colum={}
-        matrix_res_max_sovpad_po_colum={}
-        matrix_sr_sovpad_po_colum={}
-        for i in column_names:
-            matrix_obyom_po_colum[i]=sorted_obyom_rang_matrix[i]
-            matrix_dol_raz_sos_po_colum[i]=sorted_dol_raz_sos_matrix[i]
-            matrix_res_max_sovpad_po_colum[i]=sorted_res_max_sovpad_matrix[i]
-            matrix_sr_sovpad_po_colum[i]=sorted_sr_sovpad_matrix[i]
-
-        dictt_1 = {"Показатели": column_names,
-                "Объем-ранг": matrix_obyom_po_colum.values(),
-                 "Доля разн.знач.": matrix_dol_raz_sos_po_colum.values(),
-                 "Макс.совпад.": matrix_res_max_sovpad_po_colum.values(),
-                 "Ср.Совпад": matrix_sr_sovpad_po_colum.values()
-                 }
-        dataa_1= pd.DataFrame(dictt_1)
-        dataa_1["сумма"] = dataa_1[dataa_1.columns[1:]].sum(axis=1)
-        #ozgartish garak
-        M=4
-        A= M*(col_nums+1)/2
-        S=sum([(A-i)**2 for i in dataa_1["сумма"]])
-        W=(12*S)/(M**2*col_nums*(col_nums**2-1))
-        st.write(dataa_1)
-        dictt_2 = {"Показатели": column_names,
-                   "Объем-ранг":  [col_nums-i for i in list(matrix_obyom_po_colum.values())],
-                   "Доля разн.знач.": [col_nums-i for i in list(matrix_dol_raz_sos_po_colum.values())],
-                   "Макс.совпад.": [col_nums-i for i in list(matrix_res_max_sovpad_po_colum.values())],
-                   "Ср.Совпад": [col_nums-i for i in list(matrix_sr_sovpad_po_colum.values())]
-                   }
-        dataa_2 = pd.DataFrame(dictt_2)
-        dataa_2["summa"]=dataa_2[dataa_2.columns[1:]].sum(axis=1)
-        summa_2 = dataa_2["summa"].sum(axis=0)
-        dataa_2["вес"] = [i/summa_2 for i in dataa_2["summa"]]
-        st.write(dataa_2)
-        st.write("Конкордация : ",W)
-
-    # ("Неравномерность величин",
-    #  "Многозначность", "Правильность", "Уклонение",
-    #  "Типичность", "Фигурность", "Отпадение",
-    #  "Изменяемость", "Центрированность", "Расположенность")
 
