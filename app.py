@@ -87,7 +87,38 @@ if uploded_file:
     try:
         button_port = st.sidebar.button("Статистический портрет ")
         info_desc = df.describe()
+        min_vib=0
+        max_vib=0
+        for i in column_names:
+            if df[i].notna().sum() < min_vib:
+                min_vib=df[i].notna().sum()
+            if df[i].notna().sum() >max_vib:
+                max_vib=df[i].notna().sum()
         if button_port:
+            st.subheader("Представительность в изменчивости показателей")
+            a1,a2,a3=0,0,0
+            for i in column_names:
+                if df[i].notna().sum()<=row_nums//4:
+                    a1+=1
+                elif df[i].notna().sum()<=row_nums//2:
+                    a2+=1
+                elif df[i].notna().sum()<=3*row_nums//4:
+                    a3+=1
+            frame1=pd.DataFrame({"минимальный : ":[min_vib],
+            "максимальный : ":[ max_vib]})
+            st.write("Объемы выборок : ",frame1)
+            if row_nums < 4:
+                st.write(f"от 0 до {row_nums} : ", col_nums)
+            else:
+                frame2=pd.DataFrame([(str(f"от 0 до {row_nums //4} : "),a1),
+                                     (str(f"{row_nums // 4} от  до {row_nums // 2} : "), a2),
+                                     (str(f"{row_nums // 2} от  до {3 * row_nums // 4} : "), a3),
+                                     (str(f"{3 * row_nums // 4} от  до {row_nums} : "), col_nums - (a1 + a2 + a3))],
+                                    columns=("диапазон","количество показателей"))
+            st.write("Распределение показателей по объему выборки : ",frame2)
+            st.bar_chart(frame2.set_index("диапазон"),color= "#ffaa00")
+
+
             st.header("Статистический портрет системы")
             st.write(info_desc)
     except Exception as e:
@@ -123,6 +154,9 @@ if uploded_file:
         sorted_dol_raz_sos = dict(sorted(dol_raz_sostoyaniy.items(), key=lambda x: x[1], reverse=True))
         sorted_res_max_sovpad = dict(sorted(max_sovpad.items(), key=lambda x: x[1], reverse=False))
         sorted_sr_sovpad = dict(sorted(sr_sovpad.items(), key=lambda x: x[1], reverse=False))
+
+        razmax= dict()
+
         if "button_clicked" not in st.session_state:
             st.session_state.button_clicked = False
         def callback():
@@ -140,9 +174,17 @@ if uploded_file:
                  "Ср.Совпад": sorted_sr_sovpad.values()
                  }
         dataa = pd.DataFrame(dictt)
+
         if pred_btn or st.session_state.button_clicked:
             st.title("Таблица разнообразия:")
             st.write(dataa)
+            st.title("Таблица изменчивость")
+            st.subheader("Масштабность ")
+            st.write("Размах нормированного распределения : ---")
+            st.subheader("Характерность значений")
+            st.write("Характерность значений : ---")
+            st.subheader("Непропорциональность")
+            st.write("Интенсивность вариации : --- ")
 
             file_name=st.text_input("Чтобы сохранить в виде ексель файл, просто введите имя файла:")
             dataa.to_excel(f"C:/Users/dadaxon9830/Desktop/{file_name}.xlsx", index=True)
@@ -153,13 +195,7 @@ if uploded_file:
 
 
 
-            st.title("Изменчивость")
-            st.subheader("Масштабность ")
-            st.write("Размах нормированного распределения : ---")
-            st.subheader("Характерность значений")
-            st.write("Характерность значений : ---")
-            st.subheader("Непропорциональность")
-            st.write("Интенсивность вариации : --- ")
+
 
             st.title("Равномерность")
             st.subheader("Группируемость")
@@ -230,7 +266,7 @@ if uploded_file:
         summa_2 = dataa_2["summa"].sum(axis=0)
         dataa_2["вес"] = [i/summa_2 for i in dataa_2["summa"]]
         st.write(dataa_2)
-        st.write("Конкордация : ",W)
+        st.write("Коэффициент Конкордации (Согласованность) : ",W)
 
     # ("Неравномерность величин",
     #  "Многозначность", "Правильность", "Уклонение",
