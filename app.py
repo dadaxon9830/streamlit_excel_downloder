@@ -10,18 +10,20 @@ st.set_page_config(page_title="Дипломная работа")
 st.title("Data analyzer 📈 📊")
 st.write(" ")
 hide_st_style="""
+
 <style>
 .stDeployButton {visibility:hidden}
 </style>
 """
 st.markdown(hide_st_style,unsafe_allow_html=True)
 
-uploded_file = st.file_uploader(label="Выберите Excel файл  : ", type=["xlsx", "xls"],)
 
+uploded_file = st.file_uploader(label="Выберите Excel файл  : ", type=["xlsx", "xls"],)
 if uploded_file:
     try:
         df = pd.read_excel(uploded_file)
         st.markdown("---")
+
 
         deleted_data_list= st.multiselect("Выберите столбцы, которые нужно удалить : ", df.columns)
         df=df.drop(deleted_data_list,axis=1)
@@ -62,7 +64,7 @@ if uploded_file:
                 if 0 <= col_nums < 50:
                     st.write("Мало показателей для раскрытия сложного")
                 elif 50 <= col_nums < 1000:
-                    st.write("Достаточный объем информации для раскрытия сложного")
+                    st.success("Достаточный объем информации для раскрытия сложного")
                 else:
                     st.write("Недостаточная представительность данных")
             elif 500 <= row_nums < 2000:
@@ -78,13 +80,14 @@ if uploded_file:
             if per <= 5:
                 st.write("Незначильно для системы")
             elif per < 20:
-                st.write("Значильно для системы")
+                st.warning("Значильно для системы")
             else:
                 st.write("Они очень много")
     except Exception as e:
         st.warning(f"Эмпирическая ошибка : {e}")
 
     try:
+        constant_columns = df.columns[df.nunique() == 1]
         button_port = st.sidebar.button("Статистический портрет ")
         info_desc = df.describe()
         min_vib=0
@@ -95,6 +98,8 @@ if uploded_file:
             if df[i].notna().sum() >max_vib:
                 max_vib=df[i].notna().sum()
         if button_port:
+            st.markdown("---")
+            st.header("Статистический портрет системы")
             st.subheader("Представительность в изменчивости показателей")
             a1,a2,a3=0,0,0
             for i in column_names:
@@ -115,11 +120,12 @@ if uploded_file:
                                      (str(f"{row_nums // 2} от  до {3 * row_nums // 4} : "), a3),
                                      (str(f"{3 * row_nums // 4} от  до {row_nums} : "), col_nums - (a1 + a2 + a3))],
                                     columns=("диапазон","количество показателей"))
-            st.write("Распределение показателей по объему выборки : ",frame2)
-            st.bar_chart(frame2.set_index("диапазон"),color= "#ffaa00")
+                st.write("Распределение показателей по объему выборки : ",frame2)
+                st.bar_chart(frame2.set_index("диапазон"),color= "#A7C7E7")
+            st.write(f"Показателы с неизменяющимися значениями:",constant_columns)
 
 
-            st.header("Статистический портрет системы")
+
             st.write(info_desc)
     except Exception as e:
         st.warning(f"Статистическая ошибка : {e}")
