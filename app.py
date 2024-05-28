@@ -89,7 +89,45 @@ if uploded_file:
     try:
         constant_columns = df.columns[df.nunique() == 1]
         button_port = st.sidebar.button("Статистический портрет ")
-        info_desc = df.describe()
+        minzn=[]
+        maxzn=[]
+        srzn=[]
+        stdd=[]
+        notanof=[]
+        nijniy=[]
+        verxnay=[]
+        median=[]
+        razm=[]
+        moda=[]
+        for i in df:
+            minzn.append(min(df[i]))
+            maxzn.append(max(df[i]))
+            srzn.append(df[i].mean())
+            stdd.append(df[i].std())
+            notanof.append(df[i].notna().sum())
+            nijniy.append(df[i].quantile(0.25))
+            verxnay.append(df[i].quantile(0.75))
+            median.append(df[i].median())
+            razm.append(max(df[i])-min(df[i]))
+            moda.append(df[i].mode(1))
+
+        dictportstat={"Показатели":column_names,
+                      "мин. знач":minzn,
+                      "Нижняя квартиль": nijniy,
+                      "Медиана": median,
+                      "станд. отклонение":stdd,
+                      "Верхняя квартиль": verxnay,
+                      "мах. знач": maxzn,
+                      }
+        diccy={"Показатели":column_names,
+               "Объем выборки":notanof,
+               "ср. знач": srzn,
+               "Размах":razm,
+               # "Мода":moda,
+
+               }
+        framestat=pd.DataFrame(dictportstat)
+        framestat2=pd.DataFrame(diccy)
         min_vib=0
         max_vib=0
         for i in column_names:
@@ -109,6 +147,7 @@ if uploded_file:
                     a2+=1
                 elif df[i].notna().sum()<=3*row_nums//4:
                     a3+=1
+            a4=col_nums - (a1 + a2 + a3)
             frame1=pd.DataFrame({"минимальный : ":[min_vib],
             "максимальный : ":[ max_vib]})
             st.write("Объемы выборок : ",frame1)
@@ -118,15 +157,31 @@ if uploded_file:
                 frame2=pd.DataFrame([(str(f"от 0 до {row_nums //4} : "),a1),
                                      (str(f"{row_nums // 4} от  до {row_nums // 2} : "), a2),
                                      (str(f"{row_nums // 2} от  до {3 * row_nums // 4} : "), a3),
-                                     (str(f"{3 * row_nums // 4} от  до {row_nums} : "), col_nums - (a1 + a2 + a3))],
+                                     (str(f"{3 * row_nums // 4} от  до {row_nums} : "), a4)],
                                     columns=("диапазон","количество показателей"))
                 st.write("Распределение показателей по объему выборки : ",frame2)
                 st.bar_chart(frame2.set_index("диапазон"),color= "#A7C7E7")
             st.write(f"Показателы с неизменяющимися значениями:",constant_columns)
+            st.subheader("Таблица Квантили распределения")
+            st.write(framestat)
+            st.subheader("Таблица Дескриптивных статистик")
+            st.write(framestat2)
+            st.header("Заключение")
+            st.subheader("Полнота таблицы наблюдений :")
+            try :
+                if a1 > a2 + a3 + a4 or a2> a1+a3+a4 or a3>a1+a2+a4 or a4 > a1+a2+a3:
+                    st.warning("недостаточная. ")
+                else:
+                    st.success("достаточная.")
 
+            except:
+                pass
+            st.subheader("Представительность таблицы наблюдений :")
+            if col_nums > 50:
+                st.success("достаточная.")
+            else:
+                st.warning("недостаточная. ")
 
-
-            st.write(info_desc)
     except Exception as e:
         st.warning(f"Статистическая ошибка : {e}")
 
@@ -162,6 +217,30 @@ if uploded_file:
         sorted_sr_sovpad = dict(sorted(sr_sovpad.items(), key=lambda x: x[1], reverse=False))
 
         razmax= dict()
+        maks=dict()
+        xarakter=dict()
+
+        for i in df:
+            ls=[]
+            meann=df[i].mean()
+            stdd=df[i].std()
+            bigls=df[i].tolist()
+            try:
+                for j in range(len(bigls)):
+                    if  bigls[j]> meann - 4 *stdd and  bigls[j]<meann + 4 *stdd :
+                        ls.append((bigls[j]-meann)/stdd)
+                razmax[i]=max(ls)-min(ls)
+                maks[i]=max(abs(max(ls)),abs(min(ls)))
+                if len(bigls)!=len(ls):
+                    xarakter[i]=1
+                else:
+                    xarakter[i]=2
+            except:
+                pass
+
+        # st.write(razmax)
+        # st.write(maks)
+        # st.write(xarakter)
 
         if "button_clicked" not in st.session_state:
             st.session_state.button_clicked = False
@@ -192,6 +271,62 @@ if uploded_file:
             st.subheader("Непропорциональность")
             st.write("Интенсивность вариации : --- ")
 
+
+            def converter_matrix(dictionary, type_sort):
+                returned_dict = {}
+                if type_sort:
+                    for i, y in enumerate(dictionary.keys()):
+                        returned_dict[y] = ss.stats.rankdata(list(dictionary.values()))[i]
+                else:
+                    for i, y in enumerate(dictionary.keys()):
+                        returned_dict[y] = len(ss.stats.rankdata(list(dictionary.values()))) - \
+                                           ss.stats.rankdata(list(dictionary.values()))[i] + 1
+                return returned_dict
+
+
+            st.subheader("Разнообразие")
+            sorted_obyom_rang_matrix = converter_matrix(sorted_obyom_rang, False)
+            sorted_dol_raz_sos_matrix = converter_matrix(sorted_dol_raz_sos, False)
+            sorted_res_max_sovpad_matrix = converter_matrix(sorted_res_max_sovpad, True)
+            sorted_sr_sovpad_matrix = converter_matrix(sorted_sr_sovpad, True)
+
+            matrix_obyom_po_colum = {}
+            matrix_dol_raz_sos_po_colum = {}
+            matrix_res_max_sovpad_po_colum = {}
+            matrix_sr_sovpad_po_colum = {}
+            for i in column_names:
+                matrix_obyom_po_colum[i] = sorted_obyom_rang_matrix[i]
+                matrix_dol_raz_sos_po_colum[i] = sorted_dol_raz_sos_matrix[i]
+                matrix_res_max_sovpad_po_colum[i] = sorted_res_max_sovpad_matrix[i]
+                matrix_sr_sovpad_po_colum[i] = sorted_sr_sovpad_matrix[i]
+
+            dictt_1 = {"Показатели": column_names,
+                       "Объем-ранг": matrix_obyom_po_colum.values(),
+                       "Доля разн.знач.": matrix_dol_raz_sos_po_colum.values(),
+                       "Макс.совпад.": matrix_res_max_sovpad_po_colum.values(),
+                       "Ср.Совпад": matrix_sr_sovpad_po_colum.values()
+                       }
+            dataa_1 = pd.DataFrame(dictt_1)
+            dataa_1["сумма"] = dataa_1[dataa_1.columns[1:]].sum(axis=1)
+            # ozgartish garak
+            M = 4
+            A = M * (col_nums + 1) / 2
+            S = sum([(A - i) ** 2 for i in dataa_1["сумма"]])
+            W = (12 * S) / (M ** 2 * col_nums * (col_nums ** 2 - 1))
+            st.write(dataa_1)
+            dictt_2 = {"Показатели": column_names,
+                       "Объем-ранг": [col_nums - i for i in list(matrix_obyom_po_colum.values())],
+                       "Доля разн.знач.": [col_nums - i for i in list(matrix_dol_raz_sos_po_colum.values())],
+                       "Макс.совпад.": [col_nums - i for i in list(matrix_res_max_sovpad_po_colum.values())],
+                       "Ср.Совпад": [col_nums - i for i in list(matrix_sr_sovpad_po_colum.values())]
+                       }
+            dataa_2 = pd.DataFrame(dictt_2)
+            dataa_2["summa"] = dataa_2[dataa_2.columns[1:]].sum(axis=1)
+            summa_2 = dataa_2["summa"].sum(axis=0)
+            dataa_2["вес"] = [i / summa_2 for i in dataa_2["summa"]]
+            st.write(dataa_2)
+            st.write("Коэффициент Конкордации (Согласованность) : ", W)
+
             file_name=st.text_input("Чтобы сохранить в виде ексель файл, просто введите имя файла:")
             dataa.to_excel(f"C:/Users/dadaxon9830/Desktop/{file_name}.xlsx", index=True)
             anticallback()
@@ -210,69 +345,16 @@ if uploded_file:
             st.write("Среднее отклонение частности : ---")
             st.subheader("Рельефность")
             st.write("Максимальное отклонение частности")
+
+
     except Exception as e:
         st.warning(f"Предствителная ошибка : {e}")
-    box2 = st.sidebar.button("Представительност и тип")
+    box2 = st.sidebar.button("Представительность типичного и особенного")
+
     if box2:
-        try:
-            import os
-            desktop = os.path.join(os.path.join(os.environ['USERPROFILE'], "desktop"))
-            st.write(desktop)
-        except Exception as e:
-            st.success(f"@xon9830")
+        pass
 
 
-        def converter_matrix(dictionary,type_sort):
-            returned_dict={}
-            if type_sort:
-                for i, y in enumerate(dictionary.keys()):
-                    returned_dict[y]=ss.stats.rankdata(list(dictionary.values()))[i]
-            else:
-                for i, y in enumerate(dictionary.keys()):
-                    returned_dict[y] = len(ss.stats.rankdata(list(dictionary.values()))) -   ss.stats.rankdata(list(dictionary.values()))[i]+1
-            return returned_dict
-        st.subheader("Разнообразие")
-        sorted_obyom_rang_matrix=converter_matrix(sorted_obyom_rang,False)
-        sorted_dol_raz_sos_matrix=converter_matrix( sorted_dol_raz_sos,False)
-        sorted_res_max_sovpad_matrix=converter_matrix(sorted_res_max_sovpad,True)
-        sorted_sr_sovpad_matrix=converter_matrix(sorted_sr_sovpad,True)
-
-        matrix_obyom_po_colum={}
-        matrix_dol_raz_sos_po_colum={}
-        matrix_res_max_sovpad_po_colum={}
-        matrix_sr_sovpad_po_colum={}
-        for i in column_names:
-            matrix_obyom_po_colum[i]=sorted_obyom_rang_matrix[i]
-            matrix_dol_raz_sos_po_colum[i]=sorted_dol_raz_sos_matrix[i]
-            matrix_res_max_sovpad_po_colum[i]=sorted_res_max_sovpad_matrix[i]
-            matrix_sr_sovpad_po_colum[i]=sorted_sr_sovpad_matrix[i]
-
-        dictt_1 = {"Показатели": column_names,
-                "Объем-ранг": matrix_obyom_po_colum.values(),
-                 "Доля разн.знач.": matrix_dol_raz_sos_po_colum.values(),
-                 "Макс.совпад.": matrix_res_max_sovpad_po_colum.values(),
-                 "Ср.Совпад": matrix_sr_sovpad_po_colum.values()
-                 }
-        dataa_1= pd.DataFrame(dictt_1)
-        dataa_1["сумма"] = dataa_1[dataa_1.columns[1:]].sum(axis=1)
-        #ozgartish garak
-        M=4
-        A= M*(col_nums+1)/2
-        S=sum([(A-i)**2 for i in dataa_1["сумма"]])
-        W=(12*S)/(M**2*col_nums*(col_nums**2-1))
-        st.write(dataa_1)
-        dictt_2 = {"Показатели": column_names,
-                   "Объем-ранг":  [col_nums-i for i in list(matrix_obyom_po_colum.values())],
-                   "Доля разн.знач.": [col_nums-i for i in list(matrix_dol_raz_sos_po_colum.values())],
-                   "Макс.совпад.": [col_nums-i for i in list(matrix_res_max_sovpad_po_colum.values())],
-                   "Ср.Совпад": [col_nums-i for i in list(matrix_sr_sovpad_po_colum.values())]
-                   }
-        dataa_2 = pd.DataFrame(dictt_2)
-        dataa_2["summa"]=dataa_2[dataa_2.columns[1:]].sum(axis=1)
-        summa_2 = dataa_2["summa"].sum(axis=0)
-        dataa_2["вес"] = [i/summa_2 for i in dataa_2["summa"]]
-        st.write(dataa_2)
-        st.write("Коэффициент Конкордации (Согласованность) : ",W)
 
     # ("Неравномерность величин",
     #  "Многозначность", "Правильность", "Уклонение",
